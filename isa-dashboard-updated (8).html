@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISA Call Dashboard - Real Estate Sales Script Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #0a1628;
+            --secondary-bg: rgba(15, 31, 61, 0.7);
+            --accent-blue: #3b82f6;
+            --accent-blue-light: #60a5fa;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3af;
+            --success-green: #10b981;
+            --sidebar-width: 280px;
+            --summary-width: 320px;
+            --notes-height: 120px;
+        }
+
+        [data-theme="light"] {
+            --primary-bg: #f8fafc;
+            --secondary-bg: rgba(255, 255, 255, 0.9);
+            --accent-blue: #2563eb;
+            --accent-blue-light: #3b82f6;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --success-green: #059669;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Jost', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background 0.3s ease;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .theme-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-blue);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Fixed Notes Box */
+        .notes-box {
+            position: fixed;
+            top: 70px;
+            left: var(--sidebar-width);
+            right: var(--summary-width);
+            height: var(--notes-height);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            z-index: 999;
+        }
+
+        .notes-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            height: 70px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: 'Jost', sans-serif;
+            font-size: 0.95rem;
+            resize: none;
+            transition: all 0.3s ease;
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .notes-textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Profile Photo */
+        .profile-section {
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .profile-photo-frame {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-blue);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-photo-frame:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .profile-photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        /* Social Media Icons */
+        .social-media-section {
+            padding: 1rem 2rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .social-media-icons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .social-icon:hover {
+            transform: rotate(360deg) scale(1.1);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .social-icon.facebook:hover {
+            border-color: #1877f2;
+            background: rgba(24, 119, 242, 0.1);
+        }
+
+        .social-icon.facebook:hover svg {
+            fill: #1877f2;
+        }
+
+        .social-icon.instagram:hover {
+            border-color: #e4405f;
+            background: rgba(228, 64, 95, 0.1);
+        }
+
+        .social-icon.instagram:hover svg {
+            fill: #e4405f;
+        }
+
+        .social-icon.linkedin:hover {
+            border-color: #0077b5;
+            background: rgba(0, 119, 181, 0.1);
+        }
+
+        .social-icon.linkedin:hover svg {
+            fill: #0077b5;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 70px;
+            width: var(--sidebar-width);
+            height: calc(100vh - 70px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-items-container {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .nav-item {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .nav-item:hover {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--glass-bg);
+            border-left-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .nav-item-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            line-height: 28px;
+            margin-right: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .nav-item.active .nav-item-number {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        /* Objections Button */
+        .objections-toggle {
+            margin: 0.75rem 2rem;
+            padding: 0.625rem 1rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
+            border: 2px solid var(--glass-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .objections-toggle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .objections-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.7),
+                0 0 50px rgba(59, 130, 246, 0.3);
+            border-color: var(--accent-blue-light);
+        }
+
+        .objections-toggle.active {
+            background: linear-gradient(135deg, var(--success-green), #14b8a6);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.7);
+        }
+
+        /* Spark effect on click */
+        @keyframes spark {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        .objections-toggle.spark::before {
+            animation: spark 0.6s ease-out;
+            width: 200px;
+            height: 200px;
+        }
+
+        /* Glowing pulse animation */
+        @keyframes glow-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(59, 130, 246, 0.7),
+                    0 0 50px rgba(59, 130, 246, 0.3);
+            }
+        }
+
+        .objections-toggle {
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        .objections-toggle:hover {
+            animation: none;
+        }
+
+        /* Objections Modal */
+        .objections-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .objections-modal.active {
+            display: flex;
+        }
+
+        .objections-container {
+            background: var(--primary-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 1600px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .objections-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .objections-title {
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .objections-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .objections-close:hover {
+            background: #1877f2;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        /* Objections Grid */
+        .objections-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .objection-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .objection-box:hover {
+            border-color: var(--accent-blue);
+            background: var(--secondary-bg);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .objection-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .objection-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+            line-height: 1.3;
+        }
+
+        .objection-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            line-height: 1.2;
+        }
+
+        /* Objection Detail View */
+        .objection-detail {
+            display: none;
+        }
+
+        .objection-detail.active {
+            display: block;
+        }
+
+        .objection-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Jost', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .objection-back-btn:hover {
+            background: var(--secondary-bg);
+            border-color: var(--accent-blue);
+        }
+
+        .objection-detail-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .objection-detail-icon {
+            font-size: 2rem;
+        }
+
+        .objection-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .objection-section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent-blue-light);
+            margin-bottom: 1rem;
+        }
+
+        .objection-question {
+            background: var(--secondary-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .objection-question-text {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .objection-context {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .objection-script {
+            background: var(--secondary-bg);
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+
+        .objection-script.objection-type {
+            border-left: 4px solid #1877f2;
+        }
+
+        .objection-script.response-type {
+            border-left: 4px solid var(--success-green);
+        }
+
+        .objection-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .objection-text {
+            color: var(--text-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .objections-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .objections-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .objections-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .objections-container {
+                padding: 1.5rem;
+            }
+
+            .objections-title {
+                font-size: 1.5rem;
+            }
+
+            .objection-detail-title {
+                font-size: 1.4rem;
+            }
+
+            .objections-toggle {
+                margin: 0.5rem 1rem;
+                font-size: 0.8rem;
+                padding: 0.5rem 0.875rem;
+            }
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-right: var(--summary-width);
+            margin-top: calc(70px + var(--notes-height));
+            padding: 3rem;
+            flex: 1;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .content-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .box-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--accent-blue-light);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="time"],
+        textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--secondary-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Jost', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--secondary-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background: var(--glass-bg);
+            border-color: var(--accent-blue);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent-blue);
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        /* Date and Time Inputs */
+        .datetime-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            cursor: pointer;
+        }
+
+        /* Scripts */
+        .script-box {
+            background: var(--secondary-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .script-button {
+            background: var(--secondary-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            line-height: 1.7;
+        }
+
+        .script-button:hover {
+            border-color: var(--accent-blue);
+            background: var(--glass-bg);
+        }
+
+        .script-button.selected {
+            border-color: var(--success-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .positive-scripts .script-button {
+            border-left: 4px solid var(--success-green);
+        }
+
+        .objection-scripts .script-button {
+            border-left: 4px solid #1877f2;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Jost', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
+            color: white;
+            flex: 1;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-back {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-back:hover {
+            background: var(--secondary-bg);
+        }
+
+        /* Summary Box */
+        .summary-box {
+            position: fixed;
+            right: 0;
+            top: 70px;
+            width: var(--summary-width);
+            height: calc(100vh - 70px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--glass-border);
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .summary-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .copy-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .copy-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .copy-button.copied {
+            background: var(--success-green);
+        }
+
+        .copy-feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .copy-button.copied .copy-feedback {
+            opacity: 1;
+        }
+
+        .summary-item {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .summary-value.empty {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            :root {
+                --summary-width: 280px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 240px;
+                --summary-width: 260px;
+            }
+
+            .header h1 {
+                font-size: 1.25rem;
+            }
+
+            .main-content {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1001;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .summary-box {
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                z-index: 1001;
+            }
+
+            .summary-box.mobile-open {
+                transform: translateX(0);
+            }
+
+            .notes-box {
+                left: 0;
+                right: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+                margin-right: 0;
+                padding: 1.5rem;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: var(--accent-blue);
+                color: white;
+                border: none;
+                font-size: 1.5rem;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 1002;
+            }
+
+            .mobile-summary-btn {
+                display: block;
+                position: fixed;
+                bottom: 2rem;
+                left: 2rem;
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: var(--accent-blue);
+                color: white;
+                border: none;
+                font-size: 1.5rem;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 1002;
+            }
+        }
+
+        @media (min-width: 993px) {
+
+            .mobile-menu-btn,
+            .mobile-summary-btn {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.1rem;
+            }
+
+            .theme-toggle {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .content-box {
+                padding: 1.5rem;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+
+            .datetime-group {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+            }
+
+            .notes-box {
+                padding: 1rem;
+            }
+
+            .notes-textarea {
+                height: 60px;
+            }
+
+            :root {
+                --notes-height: 100px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .content-box {
+                padding: 1rem;
+            }
+
+            .box-title {
+                font-size: 1rem;
+            }
+
+            .summary-box {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏠 ISA ADRIAN Call Dashboard</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="theme-icon">☀️ Light Mode</span>
+            </button>
+        </div>
+
+        <!-- Fixed Notes Box -->
+        <div class="notes-box">
+            <label class="notes-label">📝 Additional Notes</label>
+            <textarea class="notes-textarea" id="additional-notes" placeholder="Type your notes here..."></textarea>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <div class="sidebar" id="sidebar">
+            <!-- Profile Photo Section -->
+            <div class="profile-section">
+                <div class="profile-photo-frame">
+                    <img src="Photo.png" alt="Profile Photo">
+                </div>
+                <div class="profile-name">POWER REAL STATE ROCKSTAR!</div>
+            </div>
+
+            <!-- Navigation Items -->
+            <div class="nav-items-container">
+                <div class="nav-item active">
+                    <span class="nav-item-number">1</span>
+                    Introduction
+                </div>
+                <div class="nav-item">
+                    <span class="nav-item-number">2</span>
+                    Location
+                </div>
+                <div class="nav-item">
+                    <span class="nav-item-number">3</span>
+                    Price
+                </div>
+                <div class="nav-item">
+                    <span class="nav-item-number">4</span>
+                    Motivation
+                </div>
+                <div class="nav-item">
+                    <span class="nav-item-number">5</span>
+                    Agent
+                </div>
+                <div class="nav-item">
+                    <span class="nav-item-number">6</span>
+                    Mortgage
+                </div>
+                <div class="nav-item">
+                    <span class="nav-item-number">7</span>
+                    Appointment
+                </div>
+
+                <!-- Objections Toggle Button -->
+                <div class="objections-toggle" onclick="toggleObjections()">
+                    💬 Objections
+                </div>
+
+                <!-- Social Media Icons Section -->
+                <div class="social-media-section">
+                    <div class="social-media-icons">
+                        <a href="#" class="social-icon facebook" target="_blank" rel="noopener noreferrer">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg>
+                        </a>
+                        <a href="#" class="social-icon instagram" target="_blank" rel="noopener noreferrer">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
+                            </svg>
+                        </a>
+                        <a href="#" class="social-icon linkedin" target="_blank" rel="noopener noreferrer">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Buttons -->
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <button class="mobile-summary-btn" onclick="toggleSummary()">📋</button>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Section 1: Introduction -->
+            <div class="section active" id="intro">
+                <h2 class="section-title">1. Introduction & Greeting</h2>
+
+                <div class="content-box">
+                    <div class="box-title">Opening Script</div>
+                    <div class="script-box">
+                        Hi [Name], this is [Your Name] with [Company]. How are you doing today?
+                        <br><br>
+                        I'm calling about your recent inquiry on one of our properties. I wanted to reach out personally
+                        to see how I can help you with your home search. Do you have a quick moment to chat?
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Build Rapport</div>
+                    <div class="script-box">
+                        Great! I'm excited to help you find your perfect home. Before we dive in, I'd love to learn more
+                        about what you're looking for. This will help me provide you with the most relevant options and
+                        save you time.
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-next" onclick="nextSection()">Next: Location →</button>
+                </div>
+            </div>
+
+            <!-- Section 2: Location -->
+            <div class="section" id="location">
+                <h2 class="section-title">2. Location (L)</h2>
+
+                <div class="content-box">
+                    <div class="box-title">Discovery Questions</div>
+                    <div class="script-box">
+                        <strong>Primary Question:</strong><br>
+                        "What areas or neighborhoods are you considering?"
+                        <br><br>
+                        <strong>Follow-up Questions:</strong><br>
+                        • Is there a specific school district you're interested in?<br>
+                        • How important is the commute time to work?<br>
+                        • Are you looking for a quiet neighborhood or somewhere more lively?<br>
+                        • Any areas you'd like to avoid?
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Capture Details</div>
+                    <div class="input-group">
+                        <label class="input-label">Preferred Location(s)</label>
+                        <input type="text" id="location-input" placeholder="e.g., Downtown, Westside, etc."
+                            oninput="updateSummary()">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Bedrooms</label>
+                        <input type="number" id="beds-input" placeholder="Number of bedrooms" min="0"
+                            oninput="updateSummary()">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Bathrooms</label>
+                        <input type="number" id="baths-input" placeholder="Number of bathrooms" min="0" step="0.5"
+                            oninput="updateSummary()">
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Home Category</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="single-family" onchange="updateSummary()">
+                            <label for="single-family">Single-family house</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="townhouse" onchange="updateSummary()">
+                            <label for="townhouse">Townhouse</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="duplex" onchange="updateSummary()">
+                            <label for="duplex">Duplex (2 units)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="triplex" onchange="updateSummary()">
+                            <label for="triplex">Triplex / Fourplex</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="condo" onchange="updateSummary()">
+                            <label for="condo">Condo</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="studio" onchange="updateSummary()">
+                            <label for="studio">Studio unit (single open space)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Desired Features</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="pool" onchange="updateSummary()">
+                            <label for="pool">Pool</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="garage-2" onchange="updateSummary()">
+                            <label for="garage-2">2-Car Garage</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="garage-3" onchange="updateSummary()">
+                            <label for="garage-3">3-Car Garage</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="big-lot" onchange="updateSummary()">
+                            <label for="big-lot">Big Lot</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="good-schools" onchange="updateSummary()">
+                            <label for="good-schools">Good Schools</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="parking" onchange="updateSummary()">
+                            <label for="parking">Parking</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="workspace" onchange="updateSummary()">
+                            <label for="workspace">Space for work</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="wide-kitchen" onchange="updateSummary()">
+                            <label for="wide-kitchen">Wide kitchen</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Location Features</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="residential" onchange="updateSummary()">
+                            <label for="residential">Residential</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="near-workplace" onchange="updateSummary()">
+                            <label for="near-workplace">Near workplace</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="near-home" onchange="updateSummary()">
+                            <label for="near-home">Near home</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="easy-commute" onchange="updateSummary()">
+                            <label for="easy-commute">Easy to commute</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="central" onchange="updateSummary()">
+                            <label for="central">Central</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-back" onclick="prevSection()">← Back</button>
+                    <button class="btn btn-next" onclick="nextSection()">Next: Price →</button>
+                </div>
+            </div>
+
+            <!-- Section 3: Price -->
+            <div class="section" id="price">
+                <h2 class="section-title">3. Price (P)</h2>
+
+                <div class="content-box">
+                    <div class="box-title">Discovery Questions</div>
+                    <div class="script-box">
+                        <strong>Primary Question:</strong><br>
+                        "What price range are you comfortable with?"
+                        <br><br>
+                        <strong>Alternative Approaches:</strong><br>
+                        • "Have you thought about your budget for this purchase?"<br>
+                        • "What monthly payment would you be comfortable with?"<br>
+                        • "I want to make sure I show you homes that fit your financial goals. What range works best for
+                        you?"
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Capture Details</div>
+                    <div class="input-group">
+                        <label class="input-label">Price Range</label>
+                        <input type="text" id="price-input" placeholder="e.g., $300K-$400K" oninput="updateSummary()">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Preferred Monthly Payment (Optional)</label>
+                        <input type="text" id="monthly-input" placeholder="e.g., $2,000" oninput="updateSummary()">
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">If They're Hesitant About Price</div>
+                    <div class="objection-scripts">
+                        <div class="script-button" onclick="selectScript(this, 'price', 1)">
+                            <strong>Response 1:</strong> "I completely understand. The reason I ask is to make sure I
+                            don't waste your time showing you homes outside your range. Even a ballpark figure helps -
+                            we can always adjust as we learn more about what's available."
+                        </div>
+                        <div class="script-button" onclick="selectScript(this, 'price', 2)">
+                            <strong>Response 2:</strong> "That's totally fine. Let me ask it this way - if you saw the
+                            perfect home, what monthly payment would feel comfortable to you? That helps me narrow down
+                            the best options."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-back" onclick="prevSection()">← Back</button>
+                    <button class="btn btn-next" onclick="nextSection()">Next: Motivation →</button>
+                </div>
+            </div>
+
+            <!-- Section 4: Motivation -->
+            <div class="section" id="motivation">
+                <h2 class="section-title">4. Motivation (M)</h2>
+
+                <div class="content-box">
+                    <div class="box-title">Discovery Questions</div>
+                    <div class="script-box">
+                        <strong>Primary Questions:</strong><br>
+                        • "What's driving your decision to buy now?"<br>
+                        • "What's your ideal timeline for moving?"<br>
+                        • "Is there anything specific happening that's making you want to move?"
+                        <br><br>
+                        <strong>Listen For:</strong><br>
+                        • Urgency indicators (lease ending, new job, growing family, etc.)<br>
+                        • Pain points with current situation<br>
+                        • Emotional drivers (safety, schools, lifestyle change)
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Capture Details</div>
+                    <div class="input-group">
+                        <label class="input-label">Timeline</label>
+                        <input type="text" id="timeline-input" placeholder="e.g., Next 3 months, ASAP, etc."
+                            oninput="updateSummary()">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Current Housing Situation</label>
+                        <input type="text" id="housing-input" placeholder="e.g., Renting, Living with family, etc."
+                            oninput="updateSummary()">
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Urgency Builders</div>
+                    <div class="positive-scripts">
+                        <div class="script-button" onclick="selectScript(this, 'motivation', 1)">
+                            <strong>For Timeline-Driven:</strong> "That timeline is perfect because the market right now
+                            is [favorable/competitive]. The sooner we can get you pre-approved and looking at homes, the
+                            better position you'll be in."
+                        </div>
+                        <div class="script-button" onclick="selectScript(this, 'motivation', 2)">
+                            <strong>For Flexible Timeline:</strong> "I love that you're being thoughtful about this.
+                            What I'd recommend is getting pre-approved now so when the right home comes along, you're
+                            ready to move quickly. Would that make sense?"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-back" onclick="prevSection()">← Back</button>
+                    <button class="btn btn-next" onclick="nextSection()">Next: Agent →</button>
+                </div>
+            </div>
+
+            <!-- Section 5: Agent -->
+            <div class="section" id="agent">
+                <h2 class="section-title">5. Agent (A)</h2>
+
+                <div class="content-box">
+                    <div class="box-title">Discovery Questions</div>
+                    <div class="script-box">
+                        <strong>Primary Questions:</strong><br>
+                        • "Are you currently working with a real estate agent?"<br>
+                        • "How have you been looking for homes so far?"<br>
+                        • "Have you had any consultations with agents yet?"
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Capture Details</div>
+                    <div class="input-group">
+                        <label class="input-label">How They're Searching</label>
+                        <input type="text" id="search-method-input" placeholder="e.g., Zillow, Realtor.com, etc."
+                            oninput="updateSummary()">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Agent Status</label>
+                        <input type="text" id="agent-status-input"
+                            placeholder="e.g., No agent, Working with someone, etc." oninput="updateSummary()">
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">If They Say "Just Looking Online"</div>
+                    <div class="positive-scripts">
+                        <div class="script-button" onclick="selectScript(this, 'agent', 1)">
+                            <strong>Value Proposition:</strong> "That's great that you're doing research! Here's what
+                            most people don't know - about 40% of homes sell before they even hit those websites.
+                            Working with us gives you access to listings the moment they're available, sometimes even
+                            before they're public."
+                        </div>
+                        <div class="script-button" onclick="selectScript(this, 'agent', 2)">
+                            <strong>Alternative:</strong> "I love the initiative! The challenge with searching on your
+                            own is you're only seeing part of the picture. Let me ask - have you found homes you like
+                            that are already sold? That's because the best ones go fast. Our team can help you get ahead
+                            of that."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">If They're Working With Another Agent</div>
+                    <div class="objection-scripts">
+                        <div class="script-button" onclick="selectScript(this, 'agent', 3)">
+                            <strong>Respectful Response:</strong> "That's great that you're working with someone! I
+                            respect that relationship. Out of curiosity, how's that going so far? Are you seeing the
+                            homes you want to see?"
+                            <br><br>
+                            [If they express any hesitation]<br>
+                            "I understand. Well, there's no harm in having a backup plan. Would you be open to just
+                            having a conversation about what we could offer? No pressure, just information."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-back" onclick="prevSection()">← Back</button>
+                    <button class="btn btn-next" onclick="nextSection()">Next: Mortgage →</button>
+                </div>
+            </div>
+
+            <!-- Section 6: Mortgage -->
+            <div class="section" id="mortgage">
+                <h2 class="section-title">6. Mortgage (M)</h2>
+
+                <div class="content-box">
+                    <div class="box-title">Discovery Questions</div>
+                    <div class="script-box">
+                        <strong>Primary Questions:</strong><br>
+                        • "How are you planning to pay for the home?"<br>
+                        • "Have you spoken with a lender about getting pre-approved?"<br>
+                        • "Do you have a lender you're working with, or would you like a recommendation?"
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Capture Details</div>
+                    <div class="input-group">
+                        <label class="input-label">Payment Method</label>
+                        <input type="text" id="payment-method-input" placeholder="e.g., Financing, Cash, etc."
+                            oninput="updateSummary()">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Pre-approval Status</label>
+                        <input type="text" id="preapproval-input" placeholder="e.g., Pre-approved, Not yet, etc."
+                            oninput="updateSummary()">
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">If Not Pre-approved</div>
+                    <div class="positive-scripts">
+                        <div class="script-button" onclick="selectScript(this, 'mortgage', 1)">
+                            <strong>Urgency Builder:</strong> "Getting pre-approved is going to be crucial for you.
+                            Here's why - in today's market, sellers won't even look at offers without a pre-approval
+                            letter. Plus, it helps you know exactly what you can afford so we're not wasting time
+                            looking at homes outside your budget."
+                        </div>
+                        <div class="script-button" onclick="selectScript(this, 'mortgage', 2)">
+                            <strong>Alternative:</strong> "The first step is getting pre-approved. Think of it like
+                            going to a car dealership - you wouldn't test drive without knowing what you can afford,
+                            right? Same thing here. I can connect you with a great lender who can have you pre-approved
+                            in 24-48 hours."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Transition to Next Step</div>
+                    <div class="script-box">
+                        "Perfect! So based on everything we've discussed - your preferred locations, price range,
+                        timeline, and next steps with financing - I think a Home Buyer Consultation would be incredibly
+                        valuable for you. Does that sound good?"
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-back" onclick="prevSection()">← Back</button>
+                    <button class="btn btn-next" onclick="nextSection()">Next: Appointment →</button>
+                </div>
+            </div>
+
+            <!-- Section 7: Appointment -->
+            <div class="section" id="appointment">
+                <h2 class="section-title">7. Appointment (A)</h2>
+
+                <div class="content-box">
+                    <div class="box-title">Consultation Pitch</div>
+                    <div class="script-box">
+                        Great! Based on what you've told me, I think you'd really benefit from a Home Buyer Consultation
+                        with one of our top agents.
+                        <br><br>
+                        This is a free, no-obligation meeting where we'll:
+                        <br><br>
+                        ✓ Review your specific needs and create a custom home search plan<br>
+                        ✓ Explain the entire buying process step-by-step<br>
+                        ✓ Discuss current market conditions and offer strategies<br>
+                        ✓ Answer all your questions about financing, timelines, and next steps<br>
+                        ✓ Show you how to protect yourself and your deposit<br>
+                        <br>
+                        Most of our clients tell us this one meeting saves them months of confusion and thousands of
+                        dollars. It typically takes about 30-45 minutes.
+                        <br><br>
+                        What works better for you - sometime this week or early next week?
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Alternative Approaches If Hesitant</div>
+                    <div class="script-box">
+                        <strong>Option 1 - Value Focus:</strong><br>
+                        I totally understand you might be thinking about this. Let me ask - what's your biggest concern
+                        or question about buying a home right now?
+                        <br><br>
+                        [Listen to their response]<br>
+                        <br>
+                        That's exactly what this consultation is for! We'll address that specifically and make sure you
+                        feel confident moving forward.
+                        <br><br>
+                        ---
+                        <br>
+                        <strong>Option 2 - Soft Close:</strong><br>
+                        No pressure at all! How about this - let's just get something on the calendar, and if anything
+                        changes, you can always reschedule. Would [day] at [time] work, or is [alternative day/time]
+                        better?
+                        <br><br>
+                        ---
+                        <br>
+                        <strong>Option 3 - Direct Close:</strong><br>
+                        Here's what I know - you're serious about finding a home in [location] within [timeline]. This
+                        consultation is the fastest way to make that happen. We can meet [specific day/time], go through
+                        everything, and you'll walk out with a clear action plan. Sound good?
+                        <br><br>
+                        ---
+                        OR
+                        <br><br>
+                        Awesome, well the next step would be getting more familiar with the home buying process. Are you
+                        available anytime this week to stop by our office for a Home Buyer Consultation?
+                        <br><br>
+                        ---
+                        <strong>Benefits of a Home Consultation:</strong><br>
+                        • Learn/Understand Home Buying Process<br>
+                        • Customize a plan for you based on your needs<br>
+                        • Learn more about your wants and needs<br>
+                        • Learn more about Market Trends and Offer Strategies<br>
+                        • How to protect yourself and your deposit<br>
+                        • Contracts/Agreements<br>
+                        ---
+                        <br>
+                        <strong>TRANSFER:</strong> Perfect, what I'll do next is transfer you and introduce you to one
+                        of our top local agents that will be assisting you. If you could please hold for about 10
+                        seconds, is that ok? Great!
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">Capture Details</div>
+                    <div class="input-group">
+                        <label class="input-label">Appointment Date & Time</label>
+                        <div class="datetime-group">
+                            <input type="date" id="appointment-date" min="" oninput="updateSummary()">
+                            <input type="time" id="appointment-time" oninput="updateSummary()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-box">
+                    <div class="box-title">✓ If They Agree to Consultation - Choose Your Response</div>
+                    <div class="positive-scripts">
+                        <div class="script-button" onclick="selectScript(this, 'appointment', 1)">
+                            <strong>Option 1:</strong> "Fantastic! This consultation will be a game-changer for you.
+                            We'll create a custom roadmap for your home purchase, and you'll walk away feeling confident
+                            and prepared. I'm looking forward to meeting you!"
+                        </div>
+                        <div class="script-button" onclick="selectScript(this, 'appointment', 2)">
+                            <strong>Option 2:</strong> "Excellent decision! This meeting will save you time, money, and
+                            stress. You'll learn insider strategies that most buyers never know. See you [day/time] -
+                            this is going to be great!"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-back" onclick="prevSection()">← Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Box -->
+        <div class="summary-box" id="summary-box">
+            <h3 class="summary-title">📋 Call Summary (LPMAMA)</h3>
+
+            <button class="copy-button" onclick="copySummary()">
+                <span class="copy-text">📋 Copy Summary</span>
+                <span class="copy-feedback">✓ Copied!</span>
+            </button>
+
+            <div class="summary-item">
+                <div class="summary-label">L - Location</div>
+                <div class="summary-value empty" id="summary-location">Not specified yet</div>
+            </div>
+
+            <div class="summary-item">
+                <div class="summary-label">P - Price</div>
+                <div class="summary-value empty" id="summary-price">Not specified yet</div>
+            </div>
+
+            <div class="summary-item">
+                <div class="summary-label">M - Motivation</div>
+                <div class="summary-value empty" id="summary-motivation">Not specified yet</div>
+            </div>
+
+            <div class="summary-item">
+                <div class="summary-label">A - Agent</div>
+                <div class="summary-value empty" id="summary-agent">Not specified yet</div>
+            </div>
+
+            <div class="summary-item">
+                <div class="summary-label">M - Mortgage</div>
+                <div class="summary-value empty" id="summary-mortgage">Not specified yet</div>
+            </div>
+
+            <div class="summary-item">
+                <div class="summary-label">A - Appointment</div>
+                <div class="summary-value empty" id="summary-appointment">Not scheduled yet</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Objections Modal -->
+    <div class="objections-modal" id="objections-modal">
+        <div class="objections-container">
+            <!-- Grid View -->
+            <div id="objections-grid-view">
+                <div class="objections-header">
+                    <h2 class="objections-title">💬 Common Objections & Responses</h2>
+                    <div class="objections-close" onclick="toggleObjections()">×</div>
+                </div>
+
+                <div class="objections-grid">
+                    <!-- Objection Boxes 1-14 -->
+                    <div class="objection-box" onclick="showObjectionDetail(1)">
+                        <div class="objection-icon">🏡</div>
+                        <div class="objection-title">First-Time Buyer - Overwhelmed</div>
+                        <div class="objection-subtitle">(Don't know where to start)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(2)">
+                        <div class="objection-icon">💰</div>
+                        <div class="objection-title">Affordability Concerns</div>
+                        <div class="objection-subtitle">(Not sure they can afford)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(3)">
+                        <div class="objection-icon">📊</div>
+                        <div class="objection-title">Credit Concerns</div>
+                        <div class="objection-subtitle">(Worried about credit issues)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(4)">
+                        <div class="objection-icon">📈</div>
+                        <div class="objection-title">Building Equity vs Saving</div>
+                        <div class="objection-subtitle">(Thinks they need 20% down to avoid PMI)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(5)">
+                        <div class="objection-icon">⏰</div>
+                        <div class="objection-title">Market Timing Concerns</div>
+                        <div class="objection-subtitle">(Hoping market prices will drop)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(6)">
+                        <div class="objection-icon">🎓</div>
+                        <div class="objection-title">Location Focus - Schools</div>
+                        <div class="objection-subtitle">(Focused on schools and family)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(7)">
+                        <div class="objection-icon">🗺️</div>
+                        <div class="objection-title">Multiple Location Comparison</div>
+                        <div class="objection-subtitle">(Comparing multiple areas)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(8)">
+                        <div class="objection-icon">🏖️</div>
+                        <div class="objection-title">Lifestyle-Driven Move</div>
+                        <div class="objection-subtitle">(Beach lifestyle priority)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(9)">
+                        <div class="objection-icon">🚗</div>
+                        <div class="objection-title">Commute-Focused Decision</div>
+                        <div class="objection-subtitle">(Work commute priority)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(10)">
+                        <div class="objection-icon">💎</div>
+                        <div class="objection-title">Building Wealth Focus</div>
+                        <div class="objection-subtitle">(Investment & equity building)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(11)">
+                        <div class="objection-icon">📚</div>
+                        <div class="objection-title">School District Priority</div>
+                        <div class="objection-subtitle">(Schools are top priority)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(12)">
+                        <div class="objection-icon">📦</div>
+                        <div class="objection-title">Current Space Inadequate</div>
+                        <div class="objection-subtitle">(Need more space)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(13)">
+                        <div class="objection-icon">👶</div>
+                        <div class="objection-title">Growing Family Needs</div>
+                        <div class="objection-subtitle">(Baby coming / need family space)</div>
+                    </div>
+
+                    <div class="objection-box" onclick="showObjectionDetail(14)">
+                        <div class="objection-icon">🔑</div>
+                        <div class="objection-title">Currently Renting - Ready to Own</div>
+                        <div class="objection-subtitle">(Tired of renting)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Views - Will add via separate function to keep this manageable -->
+            <div id="objection-details-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 0;
+        const sections = ['intro', 'location', 'price', 'motivation', 'agent', 'mortgage', 'appointment'];
+
+        // Set minimum date for date picker to today
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('appointment-date').setAttribute('min', today);
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach((item, index) => {
+            item.addEventListener('click', () => {
+                navigateToSection(index);
+            });
+        });
+
+        function navigateToSection(index) {
+            // Hide current section
+            document.querySelector('.section.active').classList.remove('active');
+            document.querySelector('.nav-item.active').classList.remove('active');
+
+            // Show new section
+            currentSection = index;
+            document.getElementById(sections[index]).classList.add('active');
+            document.querySelectorAll('.nav-item')[index].classList.add('active');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Close mobile menus
+            closeMobileMenus();
+        }
+
+        function nextSection() {
+            if (currentSection < sections.length - 1) {
+                navigateToSection(currentSection + 1);
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 0) {
+                navigateToSection(currentSection - 1);
+            }
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', function (event) {
+            // Only trigger if not focused on an input, textarea, or date/time picker
+            const activeElement = document.activeElement;
+            const isInputActive = activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.id === 'additional-notes';
+
+            if (isInputActive) return;
+
+            const key = event.key;
+            const sectionMap = {
+                '1': 0, // Introduction
+                '2': 1, // Location
+                '3': 2, // Price
+                '4': 3, // Motivation
+                '5': 4, // Agent
+                '6': 5, // Mortgage
+                '7': 6  // Appointment
+            };
+
+            if (sectionMap.hasOwnProperty(key)) {
+                event.preventDefault();
+                navigateToSection(sectionMap[key]);
+            }
+        });
+
+        // Script Selection
+        function selectScript(button, section, option) {
+            // Remove selected class from siblings
+            const siblings = button.parentElement.querySelectorAll('.script-button');
+            siblings.forEach(s => s.classList.remove('selected'));
+
+            // Add selected class
+            button.classList.add('selected');
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+
+            if (body.hasAttribute('data-theme')) {
+                body.removeAttribute('data-theme');
+                icon.textContent = '☀️ Light Mode';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.textContent = '🌙 Dark Mode';
+            }
+        }
+
+        // Mobile Menu Functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+            // Close summary if open
+            document.getElementById('summary-box').classList.remove('mobile-open');
+        }
+
+        function toggleSummary() {
+            const summaryBox = document.getElementById('summary-box');
+            summaryBox.classList.toggle('mobile-open');
+            // Close sidebar if open
+            document.getElementById('sidebar').classList.remove('mobile-open');
+        }
+
+        function closeMobileMenus() {
+            document.getElementById('sidebar').classList.remove('mobile-open');
+            document.getElementById('summary-box').classList.remove('mobile-open');
+        }
+
+        // Helper function for pluralization
+        function pluralize(count, singular, plural) {
+            const num = parseFloat(count);
+            if (num === 1) return `${num} ${singular}`;
+            return `${num} ${plural}`;
+        }
+
+        // Update Summary
+        function updateSummary() {
+            // Location
+            const location = document.getElementById('location-input').value;
+            const beds = document.getElementById('beds-input').value;
+            const baths = document.getElementById('baths-input').value;
+
+            // Home Category
+            const homeCategories = [];
+            if (document.getElementById('single-family').checked) homeCategories.push('Single-family');
+            if (document.getElementById('townhouse').checked) homeCategories.push('Townhouse');
+            if (document.getElementById('duplex').checked) homeCategories.push('Duplex');
+            if (document.getElementById('triplex').checked) homeCategories.push('Triplex/Fourplex');
+            if (document.getElementById('condo').checked) homeCategories.push('Condo');
+            if (document.getElementById('studio').checked) homeCategories.push('Studio');
+
+            // Desired Features
+            const features = [];
+            if (document.getElementById('pool').checked) features.push('Pool');
+            if (document.getElementById('garage-2').checked) features.push('2-Car Garage');
+            if (document.getElementById('garage-3').checked) features.push('3-Car Garage');
+            if (document.getElementById('big-lot').checked) features.push('Big Lot');
+            if (document.getElementById('good-schools').checked) features.push('Good Schools');
+            if (document.getElementById('parking').checked) features.push('Parking');
+            if (document.getElementById('workspace').checked) features.push('Space for work');
+            if (document.getElementById('wide-kitchen').checked) features.push('Wide kitchen');
+
+            // Location Features
+            const locationFeatures = [];
+            if (document.getElementById('residential').checked) locationFeatures.push('Residential');
+            if (document.getElementById('near-workplace').checked) locationFeatures.push('Near workplace');
+            if (document.getElementById('near-home').checked) locationFeatures.push('Near home');
+            if (document.getElementById('easy-commute').checked) locationFeatures.push('Easy to commute');
+            if (document.getElementById('central').checked) locationFeatures.push('Central');
+
+            let locationSummary = [];
+            if (location) locationSummary.push(location);
+            if (beds) locationSummary.push(pluralize(beds, 'bed', 'beds'));
+            if (baths) locationSummary.push(pluralize(baths, 'bath', 'baths'));
+            if (homeCategories.length > 0) locationSummary.push('Type: ' + homeCategories.join(', '));
+            if (features.length > 0) locationSummary.push('Features: ' + features.join(', '));
+            if (locationFeatures.length > 0) locationSummary.push('Location: ' + locationFeatures.join(', '));
+
+            updateSummaryField('summary-location', locationSummary.join(' | '), 'Not specified yet');
+
+            // Price
+            const price = document.getElementById('price-input').value;
+            const monthly = document.getElementById('monthly-input').value;
+            let priceSummary = [];
+            if (price) priceSummary.push(price);
+            if (monthly) priceSummary.push(monthly + '/mo');
+            updateSummaryField('summary-price', priceSummary.join(' | '), 'Not specified yet');
+
+            // Motivation
+            const timeline = document.getElementById('timeline-input').value;
+            const housing = document.getElementById('housing-input').value;
+            let motivationSummary = [];
+            if (timeline) motivationSummary.push('Timeline: ' + timeline);
+            if (housing) motivationSummary.push('Current: ' + housing);
+            updateSummaryField('summary-motivation', motivationSummary.join(' | '), 'Not specified yet');
+
+            // Agent
+            const searchMethod = document.getElementById('search-method-input').value;
+            const agentStatus = document.getElementById('agent-status-input').value;
+            let agentSummary = [];
+            if (searchMethod) agentSummary.push('Search: ' + searchMethod);
+            if (agentStatus) agentSummary.push(agentStatus);
+            updateSummaryField('summary-agent', agentSummary.join(' | '), 'Not specified yet');
+
+            // Mortgage
+            const paymentMethod = document.getElementById('payment-method-input').value;
+            const preapproval = document.getElementById('preapproval-input').value;
+            let mortgageSummary = [];
+            if (paymentMethod) mortgageSummary.push(paymentMethod);
+            if (preapproval) mortgageSummary.push(preapproval);
+            updateSummaryField('summary-mortgage', mortgageSummary.join(' | '), 'Not specified yet');
+
+            // Appointment
+            const appointmentDate = document.getElementById('appointment-date').value;
+            const appointmentTime = document.getElementById('appointment-time').value;
+            let appointmentText = '';
+
+            if (appointmentDate && appointmentTime) {
+                // Format date
+                const date = new Date(appointmentDate + 'T' + appointmentTime);
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = date.toLocaleDateString('en-US', options);
+
+                // Format time to 12-hour with AM/PM
+                let hours = date.getHours();
+                const minutes = date.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // 0 should be 12
+                const formattedTime = hours + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
+
+                appointmentText = formattedDate + ' at ' + formattedTime;
+            } else if (appointmentDate) {
+                const date = new Date(appointmentDate);
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                appointmentText = date.toLocaleDateString('en-US', options);
+            } else if (appointmentTime) {
+                const [hours24, minutes] = appointmentTime.split(':');
+                let hours = parseInt(hours24);
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                appointmentText = hours + ':' + minutes + ' ' + ampm;
+            }
+
+            updateSummaryField('summary-appointment', appointmentText, 'Not scheduled yet');
+        }
+
+        function updateSummaryField(id, value, defaultText) {
+            const element = document.getElementById(id);
+            if (value) {
+                element.textContent = value;
+                element.classList.remove('empty');
+            } else {
+                element.textContent = defaultText;
+                element.classList.add('empty');
+            }
+        }
+
+        // Copy Summary Function
+        function copySummary() {
+            const copyButton = document.querySelector('.copy-button');
+            const notes = document.getElementById('additional-notes').value;
+
+            // Get all summary values
+            const location = document.getElementById('summary-location').textContent;
+            const price = document.getElementById('summary-price').textContent;
+            const motivation = document.getElementById('summary-motivation').textContent;
+            const agent = document.getElementById('summary-agent').textContent;
+            const mortgage = document.getElementById('summary-mortgage').textContent;
+            const appointment = document.getElementById('summary-appointment').textContent;
+
+            // Format the summary with LPMAMA at top and additional info below
+            let summaryText = '=== LPMAMA SUMMARY ===\n\n';
+            summaryText += 'L - Location: ' + location + '\n';
+            summaryText += 'P - Price: ' + price + '\n';
+            summaryText += 'M - Motivation: ' + motivation + '\n';
+            summaryText += 'A - Agent: ' + agent + '\n';
+            summaryText += 'M - Mortgage: ' + mortgage + '\n';
+            summaryText += 'A - Appointment: ' + appointment + '\n';
+
+            if (notes) {
+                summaryText += '\n=== ADDITIONAL NOTES ===\n\n';
+                summaryText += notes;
+            }
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(summaryText).then(() => {
+                // Show success feedback
+                copyButton.classList.add('copied');
+                copyButton.querySelector('.copy-text').style.display = 'none';
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyButton.classList.remove('copied');
+                    copyButton.querySelector('.copy-text').style.display = 'inline';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy summary. Please try again.');
+            });
+        }
+
+        // Objections Modal Functions
+        function toggleObjections() {
+            const modal = document.getElementById('objections-modal');
+            const toggleBtn = document.querySelector('.objections-toggle');
+
+            // Add spark effect
+            toggleBtn.classList.add('spark');
+            setTimeout(() => {
+                toggleBtn.classList.remove('spark');
+            }, 600);
+
+            modal.classList.toggle('active');
+            toggleBtn.classList.toggle('active');
+
+            // Hide any open detail views when closing
+            if (!modal.classList.contains('active')) {
+                hideObjectionDetail();
+            }
+        }
+
+        function showObjectionDetail(objectionNumber) {
+            // Hide grid view
+            document.getElementById('objections-grid-view').style.display = 'none';
+
+            // Show specific detail view
+            const detailView = document.getElementById(`objection-detail-${objectionNumber}`);
+            if (!detailView) {
+                // Create detail view dynamically
+                createObjectionDetail(objectionNumber);
+            } else {
+                detailView.classList.add('active');
+            }
+        }
+
+        function hideObjectionDetail() {
+            // Hide all detail views
+            document.querySelectorAll('.objection-detail').forEach(detail => {
+                detail.classList.remove('active');
+            });
+
+            // Show grid view
+            document.getElementById('objections-grid-view').style.display = 'block';
+        }
+
+        function createObjectionDetail(num) {
+            const container = document.getElementById('objection-details-container');
+            const objectionData = getObjectionData(num);
+
+            const detailHTML = `
+                <div id="objection-detail-${num}" class="objection-detail active">
+                    <button class="objection-back-btn" onclick="hideObjectionDetail()">← Back to All Objections</button>
+                    
+                    <h2 class="objection-detail-title">
+                        <span class="objection-detail-icon">${objectionData.icon}</span>
+                        ${objectionData.title}
+                    </h2>
+
+                    <div class="objection-section">
+                        <div class="objection-section-title">Discovery Questions</div>
+                        ${objectionData.questions.map(q => `
+                            <div class="objection-question">
+                                <div class="objection-question-text"><strong>${q.label}:</strong> ${q.text}</div>
+                                <div class="objection-context">Context: ${q.context}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="objection-section">
+                        <div class="objection-section-title">Common Objections & Responses</div>
+                        ${objectionData.scripts.map(script => `
+                            <div class="objection-script objection-type">
+                                <div class="objection-label">❌ Objection:</div>
+                                <div class="objection-text">${script.objection}</div>
+                            </div>
+                            <div class="objection-script response-type">
+                                <div class="objection-label">✅ Response:</div>
+                                <div class="objection-text">${script.response}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML += detailHTML;
+        }
+
+        function getObjectionData(num) {
+            const objections = {
+                1: {
+                    icon: '🏡',
+                    title: 'First-Time Buyer - Overwhelmed',
+                    questions: [
+                        { label: 'Q1', text: "What's got you most excited about [location] specifically?", context: 'Opening question' },
+                        { label: 'Q2', text: "When you say you're feeling overwhelmed, what part of the process seems most confusing?", context: 'Understanding specific concerns' },
+                        { label: 'Q3', text: 'What would be most helpful for you right now - understanding what you qualify for, or learning about the process itself?', context: 'Directing to consultation' }
+                    ],
+                    scripts: [
+                        { objection: '"We don\'t know what we can afford"', response: 'That\'s completely normal - most first-time buyers feel exactly the same way. The good news is you don\'t have to figure it all out on your own. What would be most helpful for you right now - understanding what you qualify for, or learning about the process itself?' },
+                        { objection: '"We don\'t know how much we need for down payment"', response: 'That\'s such a common question! Here\'s some good news - you actually don\'t need 20% down. Many of my clients are surprised to learn they can put down as little as 3%. Would you be open to a quick call where we can walk through exactly what you\'d need and what programs might help?' }
+                    ]
+                },
+                2: {
+                    icon: '💰',
+                    title: 'Affordability Concerns',
+                    questions: [
+                        { label: 'Q1', text: "When you say you're not sure you can afford it, are you thinking about the down payment, the monthly payment, or just the overall prices you're seeing?", context: 'Clarifying specific concern' },
+                        { label: 'Q2', text: 'Have you had a chance to get pre-qualified to see what you actually qualify for?', context: 'Opening door to consultation' },
+                        { label: 'Q3', text: 'Would it make sense to connect you with someone this week who can show you exactly what you qualify for and what programs might help?', context: 'Moving toward appointment' }
+                    ],
+                    scripts: [
+                        { objection: '"House payments would be way more than our rent"', response: 'That\'s actually a really common misconception. A lot of my clients are surprised to learn that the monthly payment on a home is often closer to their rent than they expect, especially when you factor in tax benefits. On a $750,000 home in Costa Mesa with 5% down, your payment would be around $4,200 including taxes and insurance. Does that change your perspective?' },
+                        { objection: '"We assumed we wouldn\'t qualify for enough"', response: 'I hear you - and that\'s exactly why it would be worth getting a consultation. You might be surprised at what options are available to you. Many programs allow you to put down as little as 3%, and some even help with down payment assistance. Would it make sense to connect you with someone this week who can show you exactly what you qualify for?' }
+                    ]
+                },
+                3: {
+                    icon: '📊',
+                    title: 'Credit Concerns',
+                    questions: [
+                        { label: 'Q1', text: "I appreciate you being upfront about that. Credit concerns are actually more common than you might think, and the good news is that lending guidelines have become more flexible in recent years. What's your current credit score range, if you don't mind me asking?", context: 'Normalizing and gathering info' },
+                        { label: 'Q2', text: 'What options are available and what you might need to do to strengthen your application?', context: 'After explaining loan programs for various credit scores' }
+                    ],
+                    scripts: [
+                        { objection: '"We thought we\'d need perfect credit to buy a house"', response: 'That\'s a common myth, but it\'s definitely not true. Lenders look at your whole financial picture - income, debt, savings, and credit history - not just your credit score. A consultation would help you understand exactly what you qualify for and if there are any steps that might help strengthen your application. Would that be helpful?' },
+                        { objection: '"Our credit score is around 620-630"', response: 'Actually, that\'s not too low at all! There are loan programs available for credit scores in that range. FHA loans, for example, can work with scores as low as 580 with the right circumstances. The key is understanding what options are available and what you might need to do to strengthen your application. Would you like to know what your real options are?' }
+                    ]
+                },
+                4: {
+                    icon: '📈',
+                    title: 'Building Equity vs Saving',
+                    questions: [
+                        { label: 'Q1', text: 'Can I ask - what\'s driving your interest in moving to [location] in the first place?', context: 'Redirecting to motivation' },
+                        { label: 'Q2', text: 'On a $650,000 home, 3.5% down would be about $22,750. Your monthly payment would include a small PMI fee, but you\'d be building equity instead of paying rent. Many of my clients find that even with PMI, it makes more financial sense than continuing to rent. Does that change your perspective?', context: 'Presenting the math' }
+                    ],
+                    scripts: [
+                        { objection: '"You really can\'t buy without 20% down"', response: 'I totally see why you\'d think that - it\'s a super common myth! But here\'s the thing: For a down payment requiring 20% in savings for a typical home, that\'s tens of thousands of dollars. The reality is, many buyers choose to put down less and start building equity immediately rather than waiting years to save 20%. For example, FHA loans allow 3.5% down, and conventional loans can go as low as 3%.' },
+                        { objection: '"We want to avoid PMI at all costs"', response: 'I totally hear that concern, and PMI is something to consider. But let me give you a different perspective - if you\'re currently paying rent, you\'re essentially paying someone else\'s mortgage with zero return. With PMI, at least you\'re building equity. Plus, once you hit 20% equity, the PMI drops off. What finally made you decide to start looking into buying vs renting?' }
+                    ]
+                },
+                5: {
+                    icon: '⏰',
+                    title: 'Market Timing Concerns',
+                    questions: [
+                        { label: 'Q1', text: 'What specifically are you hoping will change with the market?', context: 'Understanding their thinking' },
+                        { label: 'Q2', text: 'Can I ask - what\'s driving your interest in moving to [location] in the first place?', context: 'Refocusing on their real needs' }
+                    ],
+                    scripts: [
+                        { objection: '"Everyone keeps saying prices might come down"', response: 'I understand that thinking. Can I ask - what\'s driving your interest in Huntington Beach in the first place? [Listen] Those are really important quality of life factors. Have you calculated what staying in your current situation costs you in terms of continued rent payments and missing out on building equity? Plus, your family misses out on that beach lifestyle for another year. So if you wait a year, that\'s almost $50,000 in rent with nothing to show for it. Even if prices dropped 5-10%, you might end up paying more overall when you factor in what you\'re losing by not owning.' },
+                        { objection: '"We\'re hoping prices will drop back to where they were"', response: 'That\'s really thoughtful planning. What specifically are you hoping will change with the market? [Listen] I appreciate you being upfront about your budget. In Newport Beach and Manhattan Beach, that would be pretty challenging for what you\'re looking for. But there might be other options in all three communities. In that price range, you might find slightly more house in Anaheim, but Irvine and Fullerton might offer some lifestyle advantages. Would it be helpful to connect you with someone this week who can show you what\'s realistic in your budget and help you find the best combination of location and value?' }
+                    ]
+                },
+                6: {
+                    icon: '🎓',
+                    title: 'Location Focus - Schools',
+                    questions: [
+                        { label: 'Q1', text: 'What areas are you focusing on for this move?', context: 'Opening question' },
+                        { label: 'Q2', text: 'I love that you know exactly what you want! What specifically about Irvine appeals to you most?', context: 'After they mention Irvine' },
+                        { label: 'Q3', text: 'Those are excellent priorities, especially with kids. How important is staying within Irvine proper versus being open to nearby areas with similar qualities?', context: 'Exploring flexibility' }
+                    ],
+                    scripts: [
+                        { objection: '"We only want to look at Irvine, that\'s the only place we\'d consider"', response: 'I love that you know exactly what you want! What specifically about Irvine appeals to you most - is it the schools, the safety, the family-friendly community, or something else? [Listen] Those are excellent priorities, especially with kids. How important is staying within Irvine proper versus being open to nearby areas with similar qualities?' },
+                        { objection: '"The schools are amazing, very safe, planned community"', response: 'Those are excellent priorities, especially with kids. How important is staying within Irvine proper versus being open to nearby areas with similar qualities? [Response] That makes sense - you want the best combination of what you\'re looking for and good value. Properties in Irvine typically run $800K-900K depending on size and location. Does that fit what you had in mind?' }
+                    ]
+                },
+                7: {
+                    icon: '🗺️',
+                    title: 'Multiple Location Comparison',
+                    questions: [
+                        { label: 'Q1', text: 'What areas are you exploring?', context: 'Opening' },
+                        { label: 'Q2', text: 'Those are beautiful areas! What\'s drawing you to the beach communities specifically?', context: 'After they mention beach areas' },
+                        { label: 'Q3', text: 'That\'s totally normal for first-time buyers! Orange County has communities at different price points. What\'s your current housing cost - are you renting or living with family?', context: 'Budget exploration' }
+                    ],
+                    scripts: [
+                        { objection: '"We\'re looking at Newport Beach, Manhattan Beach, or Irvine"', response: 'Those are beautiful areas! What\'s drawing you to the beach communities specifically? [Listen] That sounds like an amazing lifestyle for a family! What\'s your comfortable range for this move?' },
+                        { objection: '"We\'re hoping to stay around $650K"', response: 'I appreciate you being upfront about your budget. In Newport Beach and Manhattan Beach, that would be pretty challenging for what you\'re looking for. But there might be better options. In that price range, you might find slightly more house in areas like Costa Mesa, Garden Grove, or Tustin - places that still give you great communities in Orange County. Would it make sense to connect you with someone this week who can show you exactly what you qualify for and what\'s available in those areas?' }
+                    ]
+                },
+                8: {
+                    icon: '🏖️',
+                    title: 'Lifestyle-Driven Move',
+                    questions: [
+                        { label: 'Q1', text: 'What areas are you exploring?', context: 'Opening' },
+                        { label: 'Q2', text: 'Those are beautiful areas! What\'s drawing you to the beach communities specifically?', context: 'Understanding motivation' },
+                        { label: 'Q3', text: 'That sounds like an amazing lifestyle for a family! What\'s your comfortable range for this move?', context: 'Budget discussion' }
+                    ],
+                    scripts: [
+                        { objection: '"We really want to be in Newport Beach or Manhattan Beach"', response: 'Those are beautiful areas! What\'s drawing you to the beach communities specifically? [Listen] That sounds like an amazing lifestyle for a family! What\'s your comfortable range for this move?' },
+                        { objection: '"We love the lifestyle and being close to the water, want kids to grow up near beach"', response: 'That sounds like an amazing lifestyle for a family! What\'s your comfortable range for this move? [Response] I appreciate you being upfront about your budget. In Newport Beach and Manhattan Beach, that would be pretty challenging for what you\'re looking for. But there might be better value options. Would it make sense to connect you with someone this week who can show you what\'s realistic in your budget and help you find the best combination of location and value?' }
+                    ]
+                },
+                9: {
+                    icon: '🚗',
+                    title: 'Commute-Focused Decision',
+                    questions: [
+                        { label: 'Q1', text: 'What areas are you focusing on for this search?', context: 'Opening' },
+                        { label: 'Q2', text: 'That makes sense - they do have different strengths. What\'s most important in your decision - schools, commute time, or getting the most house for your money?', context: 'Prioritizing needs' },
+                        { label: 'Q3', text: 'Perfect! That actually narrows it down nicely. All three areas have good schools, but your commute would be easiest from [closest area]. What areas appeal to you most - do you prefer being closer to the beach, closer to work, or in a more family-oriented community?', context: 'After they prioritize' }
+                    ],
+                    scripts: [
+                        { objection: '"We\'re looking at several places - maybe Anaheim, Fullerton, or Irvine"', response: 'Those are all great communities! What\'s making it hard to choose between them? [Listen] That makes sense - they do have different strengths. What\'s most important in your decision - schools, commute time, or getting the most house for your money?' },
+                        { objection: '"All seem nice, but not sure about differences in schools, commute, value"', response: 'That makes sense - they do have different strengths. What\'s most important in your decision - schools, commute time, or getting the most house for your money? [Response] Perfect! That actually narrows it down nicely. Would it be helpful to connect you with someone this week who can show you what\'s realistic in your budget and help you understand which areas give you the best combination?' }
+                    ]
+                },
+                10: {
+                    icon: '💎',
+                    title: 'Building Wealth Focus',
+                    questions: [
+                        { label: 'Q1', text: 'What\'s driving your interest in real estate right now?', context: 'Opening' },
+                        { label: 'Q2', text: 'That\'s exciting! What specifically are you looking to upgrade?', context: 'After mentioning upgrade' },
+                        { label: 'Q3', text: 'What finally made you decide to start looking actively?', context: 'Understanding timing' }
+                    ],
+                    scripts: [
+                        { objection: '"I\'ve been reading about it and think it\'s time to get started / We want to diversify"', response: 'That\'s smart thinking! What specifically are you looking to upgrade? [Listen] Those are great reasons to upgrade. What would your ideal upgraded situation look like?' },
+                        { objection: '"Maybe a yard, more space, better neighborhood, building equity"', response: 'Those are great reasons to upgrade. What would your ideal upgraded situation look like? [Response] That sounds wonderful! What would make this upgrade feel like a real step forward for you? [Listen] That\'s exciting - it sounds like you\'re ready to find the right opportunity. Would it make sense to connect you with someone who understands both the financial aspects and can help you analyze properties from an investment perspective? They can show you what\'s realistic in your budget and help you make smart financial decisions.' }
+                    ]
+                },
+                11: {
+                    icon: '📚',
+                    title: 'School District Priority',
+                    questions: [
+                        { label: 'Q1', text: 'What\'s got you thinking about making a move?', context: 'Opening' },
+                        { label: 'Q2', text: 'That\'s such a smart decision for her future! What grade will she be starting?', context: 'After mentioning schools' },
+                        { label: 'Q3', text: 'Perfect! How long have you been thinking about this move?', context: 'Understanding timeline' }
+                    ],
+                    scripts: [
+                        { objection: '"Putting daughter into a great school, feeling like we made a smart decision"', response: 'That\'s such a smart decision for her future! What grade will she be starting? [Listen] Perfect timing! So you have time to find the perfect place without rushing. How long have you been thinking about this move?' },
+                        { objection: '"A while, but we wanted to make sure we were financially ready"', response: 'That\'s really responsible planning. What\'s your timeline for making this happen? [Response] Great timeline! That gives you time to find the perfect spot without rushing. But you\'re also being realistic about not waiting too long. Would it make sense to connect you with someone this week who can show you what\'s realistic in your budget and help you understand what you can afford in your desired areas and school districts? That way, you can start feeling confident about your options right away.' }
+                    ]
+                },
+                12: {
+                    icon: '📦',
+                    title: 'Current Space Inadequate',
+                    questions: [
+                        { label: 'Q1', text: 'What\'s driving your interest in real estate right now?', context: 'Opening' },
+                        { label: 'Q2', text: 'That\'s exciting! What specifically are you looking to upgrade?', context: 'Understanding needs' },
+                        { label: 'Q3', text: 'What finally made you decide to start looking actively?', context: 'Timeline question' }
+                    ],
+                    scripts: [
+                        { objection: '"Outgrown our current place, time to get started"', response: 'That\'s exciting! What specifically are you looking to upgrade? [Listen] Those are great reasons to upgrade. What would your ideal upgraded situation look like?' },
+                        { objection: '"More space, better neighborhood, maybe a yard"', response: 'Those are great reasons to upgrade. What would your ideal upgraded situation look like? [Response] That sounds wonderful! What would make this upgrade feel like a real step forward for you?' }
+                    ]
+                },
+                13: {
+                    icon: '👶',
+                    title: 'Growing Family Needs',
+                    questions: [
+                        { label: 'Q1', text: 'What\'s got you thinking about making a move?', context: 'Opening' },
+                        { label: 'Q2', text: 'Congratulations! How exciting! When are you due?', context: 'After baby mention' },
+                        { label: 'Q3', text: 'That\'s smart thinking! What\'s your timeline for making this happen?', context: 'Understanding urgency' }
+                    ],
+                    scripts: [
+                        { objection: '"We\'re having a baby and our current place won\'t work"', response: 'Congratulations! How exciting! When are you due? [Listen] That\'s smart timing then! What\'s your timeline for making this happen?' },
+                        { objection: '"Ideally before baby arrives / within the next 3-6 months"', response: 'That\'s smart thinking! Given your timeline, it would make sense to get connected with someone pretty soon so you\'re not rushed. Would you be open to a consultation this week to understand exactly what you qualify for and what your options are? That way you can make an informed decision rather than feeling pressured as your move date gets closer.' }
+                    ]
+                },
+                14: {
+                    icon: '🔑',
+                    title: 'Currently Renting - Ready to Own',
+                    questions: [
+                        { label: 'Q1', text: 'What\'s got you thinking about making a move?', context: 'Opening' },
+                        { label: 'Q2', text: 'That\'s smart planning. What specifically about your current place won\'t work as you grow?', context: 'Understanding specific needs' },
+                        { label: 'Q3', text: 'That sounds perfect for a growing family. What would make this move feel like a real win for you guys?', context: 'Vision question' }
+                    ],
+                    scripts: [
+                        { objection: '"Just having enough space, not tripping over each other"', response: 'I get that completely! What would make this move feel like a real win for you guys? [Listen] That sounds perfect for a growing family. Absolutely! Let\'s find you the best combination of location and value. Are you available Tuesday or Wednesday evening for a consultation?' },
+                        { objection: '"Not just having enough space, but also not being in a good neighborhood"', response: 'Those are exactly the right priorities. What would make this move feel like a real win for you guys? [Response] That sounds wonderful! Would it make sense to connect you with someone this week who can show you what\'s realistic in your budget and help you understand your upgrade options?' }
+                    ]
+                }
+            };
+
+            return objections[num];
+        }
+
+        // Initialize
+        updateSummary();
+    </script>
+</body>
+
+</html>
